@@ -269,7 +269,7 @@ int main(int argc, char** argv) {
 			}
 
 			game_open = 1;
-			printf("Game opened!\n");
+			printf("Game opened!\nWaiting for the timer to stop...\n");
 		}
 		/*
 		if(GetAsyncKeyState('J') & 0x8000) {
@@ -301,7 +301,7 @@ int main(int argc, char** argv) {
 			if (replace_igt == 1 && timer_state == 1 && saved_tp_count == tp_count) {
 				printf("\nRestoring IGT...");
 				WriteProcessMemory(process, igt_address, &saved_igt, sizeof(saved_igt), NULL);
-				printf(" Success!\n");
+				printf(" Success!\nWaiting for the timer to stop...\n");
 				replace_igt = 0;
 			}
 			/*
