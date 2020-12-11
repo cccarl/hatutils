@@ -1,13 +1,22 @@
-This is HatLag
-Just double-click HatLag.exe to use (if you pass an argument, that will override the path for keybinds.txt)
-It works on DLC1.5 (DW Any%), DLC2.1 (Any%), DLC2.31 (TAS patch), and DLC2.32 (110%)
+# Welcome to the Hat IGT Restorer!
 
-Then, keybinds.txt contains your binds, in the format "keycode: millisecond-duration", one on each line
-There can be an unlimited amount of binds, each with their own lag durations. Please note that, unless the --i-am-testing commandline argument is added, that every duration will be replaced with 400 milliseconds
+## How do I use this?
 
-The keycode list can be found at https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
-Feel free to follow the example keybinds.txt file, which lags for 1000ms whenever Return (Enter) is pressed, and lags for 300ms whenever "0" is pressed
+Simply open this while the game is open, and it should show a message telling you about the game being opened.
+You can verify that it's working by beating The Finale and checking if a message is shown explaining what the program is going to do.
+Note that it currently supports DLC 2.1 and DLC 2.32 (aka 110% patch).
 
-You can easily use programs such as DS4Windows or x360ce to bind lag keys to your controller; the game does not switch to keyboard input if you use modifier keycodes (e.g. Right Shift)
+## What does this exactly do?
 
-Additionally, whenever the "J" key is pressed, the program will reload keybinds.txt -- this bind is hardcoded
+This program's code is based on doesthisusername's HatLag program which you may be familiar with, to read and write the game's process.
+It will wait until the game's timer is stopped/green, once that happens it will store the IGT value and current number of time pieces.
+After that, it will wait until a file with the same number of time pieces as before is opened, and once that happens the game's IGT will be 
+overwritten with the one stored in the program, after this the program will return to its initial state of waiting.
+
+## Why is this needed?
+
+For an unknown reason, on the DLC 2.X patches of the game, when a file is entered a second time after being created, the 
+game's timers always reset to 0, which is very inconvenient for speedrun categories that must complete the Tour time rift,
+since that forces players to beat The Finale, go back to the main menu and reopen the file to unlock that time rift. The workaround
+was creating and entering a new file, going back to main menu immediately and opening it again to start a run with a "fixed" timer, 
+which can be obnoxious after a few resets.

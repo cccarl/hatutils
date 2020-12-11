@@ -34,16 +34,6 @@ BYTE* hat_address = NULL;
 unsigned int pe_ts;
 unsigned int i_am_testing = 0;
 
-BYTE* fps_address = NULL;
-char* fps_path = NULL;
-char* fps_paths[VER_MAX] = {
-	"0x11BC360, 0x710",
-	"0x11F9FE0, 0x710",
-	//"0x11C27E0, 0x710",
-	//"0x11F6F10, 0x710",
-	//"0x11229C0, 0x710",
-	//"0x11FBB10, 0x710"
-};
 
 BYTE* timer_state_address = NULL;
 unsigned long long timer_state_addresses[VER_MAX] = {
@@ -77,7 +67,7 @@ BYTE* resolve_ptr(HANDLE process, void* address) {
 	ReadProcessMemory(process, address, &resolved, 8, NULL);
 	return resolved;
 }
-
+/*
 void* resolve_ptr_path(HANDLE process, BYTE* base, const char* path) {
 	char* next;
 	unsigned long long offset;
@@ -96,6 +86,7 @@ void* resolve_ptr_path(HANDLE process, BYTE* base, const char* path) {
 
 	return (void*)resolved;
 }
+*/
 
 int is_hat_open() {
 	if(FindWindow(HAT_WINDOW, NULL) != NULL) {
@@ -219,10 +210,11 @@ struct hotkey* parse_keybinds(const char* path, unsigned int* out_num) {
 }*/
 
 int main(int argc, char** argv) {
+
 	int always = 1;
 	/*
 	char* hotkey_path = "keybinds.txt";
-	
+
 	for(int i = 1; i < argc; i++) {
 		if(strncmp(argv[i], "--i-am-testing", sizeof("--i-am-testing") - 1) == 0) {
 			i_am_testing = 1;
@@ -232,7 +224,6 @@ int main(int argc, char** argv) {
 		}
 	}
 	*/
-
 	unsigned int game_open = 0;
 	//unsigned int hotkey_num;
 	//struct hotkey* hotkeys = NULL;
@@ -267,37 +258,24 @@ int main(int argc, char** argv) {
 					timer_state_address = (BYTE*)(timer_state_addresses[1] + (unsigned long long)hat_address);
 					tp_count_address = (BYTE*)(tp_count_addresses[1] + (unsigned long long)hat_address);
 					break;
-					//case DLC15_8061143192026666389: fps_path = fps_paths[0]; break;
-					//case DLC231_7770543545116491859: fps_path = fps_paths[2]; break;
-					//case MODDING_2996573833536660306: fps_path = fps_paths[4]; break;
-					//case CURRENT_20200903: fps_path = fps_paths[5]; break;
+				//case DLC15_8061143192026666389: fps_path = fps_paths[0]; break;
+				//case DLC231_7770543545116491859: fps_path = fps_paths[2]; break;
+				//case MODDING_2996573833536660306: fps_path = fps_paths[4]; break;
+				//case CURRENT_20200903: fps_path = fps_paths[5]; break;
 				default: {
 					printf("Your version of the game is not supported (%u), doing nothing.\n", pe_ts);
 					continue;
 				}
 			}
 
-
-			/*
-			if(hotkeys != NULL) {
-				free(hotkeys);
-			}
-			
-			hotkeys = parse_keybinds(hotkey_path, &hotkey_num);
-			if(hotkeys == NULL) {
-				printf("Keybind parsing error, press any key to exit.\n");
-				getchar();
-				return 0;
-			}
-			*/
 			game_open = 1;
 			printf("Game opened!\n");
 		}
-		
+		/*
 		if(GetAsyncKeyState('J') & 0x8000) {
 			always = 1;
 		}
-		
+		*/
 		if (is_hat_open() && game_open) {
 
 			ReadProcessMemory(process, timer_state_address, &timer_state, sizeof(timer_state), NULL);
@@ -310,10 +288,10 @@ int main(int argc, char** argv) {
 				ReadProcessMemory(process, tp_count_address, &saved_tp_count, sizeof(saved_tp_count), NULL);
 
 				// print message (this spaghetti makes the time printed follow the format of the igt)
-				printf("\nTimer Freeze detected!\nSaving the following IGT value: %f (%d", saved_igt, (int)saved_igt / 3600); // hour
-				(int)saved_igt % 3600 / 60 > 9 ? printf(":%d:", (int)saved_igt % 3600 / 60) : printf(":0%d:", (int)saved_igt % 3600 / 60); // minute
+				printf("\nTimer stop detected!\nSaving the following IGT value: %f (%d", saved_igt, (int)saved_igt / 3600); // hours
+				(int)saved_igt % 3600 / 60 > 9 ? printf(":%d:", (int)saved_igt % 3600 / 60) : printf(":0%d:", (int)saved_igt % 3600 / 60); // minutes
 				(double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt >= 10.0 ? printf("%.2f)\n", (double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) : printf("0%.2f)\n", (double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt); // seconds + ms
-				printf("It will be restored to the next file opened with %d timepieces.\n", saved_tp_count);
+				printf("It will be restored to the next file opened with %d time pieces.\n", saved_tp_count);
 				
 				// set replace igt flag
 				replace_igt = 1;
@@ -334,7 +312,6 @@ int main(int argc, char** argv) {
 					ReadProcessMemory(process, igt_address, &igt, sizeof(igt), NULL);
 					ReadProcessMemory(process, tp_count_address, &tp_count, sizeof(tp_count), NULL);
 					printf("\nTIMEPIECES WOO: %d\n", tp_count);
-					printf("FPS ADD: %llu\n", (unsigned __int64)fps_address);
 					printf("IGT: %f\n", igt);
 					printf("TIMER STATE: %d\n", timer_state);
 					printf("replace_igt, timer_state: %d, %d\n\n", replace_igt, timer_state);
