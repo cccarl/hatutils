@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <Windows.h>
 #include <tlhelp32.h>
+#include <math.h>
 
 #define HAT_WINDOW L"LaunchUnrealUWindowsClient"
 #define HAT_TITLE L"A Hat in Time (64-bit, Final Release Shipping PC, DX9, Modding)"
@@ -271,11 +272,33 @@ int main(int argc, char** argv) {
 			game_open = 1;
 			printf("Game opened!\nWaiting for the timer to stop...\n");
 		}
+
+		// testing / debugging
 		/*
-		if(GetAsyncKeyState('J') & 0x8000) {
-			always = 1;
+		if (GetAsyncKeyState('J') & 0x8000) {
+
+			ReadProcessMemory(process, timer_state_address, &timer_state, sizeof(timer_state), NULL);
+			ReadProcessMemory(process, igt_address, &saved_igt, sizeof(saved_igt), NULL);
+
+			// print message (this spaghetti makes the time printed follow the format of the igt)
+			// message + hours
+			printf("\nIGT value: %f (%d", saved_igt, (int)saved_igt / 3600);
+			// minutes [ (int)igt % 60 ]
+			(int)saved_igt % 3600 / 60 > 9 ? printf(":%d:", (int)saved_igt % 3600 / 60) : printf(":0%d:", (int)saved_igt % 3600 / 60);
+			// seconds + ms [ igt % 60 + igt - (int)igt ], then multiply by 100, apply trunc(), divide by 100
+			(double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt >= 10.0 ? printf("%.2f)\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0) : printf("0%.2f)\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0);
+
+			ReadProcessMemory(process, tp_count_address, &tp_count, sizeof(tp_count), NULL);
+			printf("TIMEPIECES WOO: %d\n", tp_count);
+			printf("TIMER STATE: %d\n", timer_state);
+			printf("replace_igt: %d\n", replace_igt);
+			printf("timer_state: %d\n\n", timer_state);
+
+			//always = 1;
 		}
 		*/
+		
+		
 		if (is_hat_open() && game_open) {
 
 			ReadProcessMemory(process, timer_state_address, &timer_state, sizeof(timer_state), NULL);
@@ -288,9 +311,12 @@ int main(int argc, char** argv) {
 				ReadProcessMemory(process, tp_count_address, &saved_tp_count, sizeof(saved_tp_count), NULL);
 
 				// print message (this spaghetti makes the time printed follow the format of the igt)
-				printf("\nTimer stop detected!\nSaving the following IGT value: %f (%d", saved_igt, (int)saved_igt / 3600); // hours
-				(int)saved_igt % 3600 / 60 > 9 ? printf(":%d:", (int)saved_igt % 3600 / 60) : printf(":0%d:", (int)saved_igt % 3600 / 60); // minutes
-				(double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt >= 10.0 ? printf("%.2f)\n", (double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) : printf("0%.2f)\n", (double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt); // seconds + ms
+				// message + hours
+				printf("\nTimer stop detected!\nSaving the following IGT value: %f (%d", saved_igt, (int)saved_igt / 3600);
+				// minutes [ (int)igt % 60 ]
+				(int)saved_igt % 3600 / 60 > 9 ? printf(":%d:", (int)saved_igt % 3600 / 60) : printf(":0%d:", (int)saved_igt % 3600 / 60);
+				// seconds + ms [ igt % 60 + igt - (int)igt ], then multiply by 100, apply trunc(), and divide by 100
+				(double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt >= 10.0 ? printf("%.2f)\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0) : printf("0%.2f)\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0);
 				printf("It will be restored to the next file opened with %d time pieces.\n", saved_tp_count);
 				
 				// set replace igt flag
@@ -304,22 +330,7 @@ int main(int argc, char** argv) {
 				printf(" Success!\nWaiting for the timer to stop...\n");
 				replace_igt = 0;
 			}
-			/*
-			// original lag button detection, just for debugging here
-			for(unsigned int i = 0; i < hotkey_num; i++) {
-				if(GetAsyncKeyState(hotkeys[i].vk) & 0x8000) {
 
-					ReadProcessMemory(process, igt_address, &igt, sizeof(igt), NULL);
-					ReadProcessMemory(process, tp_count_address, &tp_count, sizeof(tp_count), NULL);
-					printf("\nTIMEPIECES WOO: %d\n", tp_count);
-					printf("IGT: %f\n", igt);
-					printf("TIMER STATE: %d\n", timer_state);
-					printf("replace_igt, timer_state: %d, %d\n\n", replace_igt, timer_state);
-
-					Sleep((DWORD)(hotkeys[i].duration * 0.3f));
-				}
-			}
-			*/
 		}
 		// only check once per second if the timer state is 2
 		if (replace_igt != 1) {

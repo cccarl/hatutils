@@ -1,10 +1,13 @@
 # Welcome to the Hat IGT Restorer!
 
+KEEP IN MIND THAT THIS IS ONLY USEFUL FOR SPEEDRUN CATEGORIES THAT HAVE TO GO THROUGH THE TOUR TIME RIFT FROM A FRESH SAVE FILE!
+
 ## How do I use this?
 
 Simply open this while the game is open, and it should show a message telling you about the game being opened.
 You can verify that it's working by beating The Finale and checking if a message is shown explaining what the program is going to do.
-Note that it currently supports DLC 2.1 and DLC 2.32 (aka 110% patch).
+
+Suported patches: DLC 2.1 and DLC 2.32 (aka 110% patch).
 
 ## What does this exactly do?
 
