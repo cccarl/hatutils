@@ -48,10 +48,23 @@ unsigned long long igt_addresses[VER_MAX] = {
 	0x10A8084
 };
 
+BYTE* real_igt_address = NULL;
+unsigned long long real_igt_addresses[VER_MAX] = {
+	0x106AD64,
+	0x10A8094
+};
+
 BYTE* tp_count_address = NULL;
 unsigned long long tp_count_addresses[VER_MAX] = {
 	0x106AD74,
 	0x10A80A4
+};
+
+BYTE* chapter_address = NULL;
+char* chapter_path = NULL;
+char* chapter_paths[VER_MAX] = {
+	"0x011E1570, 0x68, 0x108",
+	"0x0121F280, 0x68, 0x108",
 };
 
 
@@ -68,7 +81,7 @@ BYTE* resolve_ptr(HANDLE process, void* address) {
 	ReadProcessMemory(process, address, &resolved, 8, NULL);
 	return resolved;
 }
-/*
+
 void* resolve_ptr_path(HANDLE process, BYTE* base, const char* path) {
 	char* next;
 	unsigned long long offset;
@@ -87,7 +100,7 @@ void* resolve_ptr_path(HANDLE process, BYTE* base, const char* path) {
 
 	return (void*)resolved;
 }
-*/
+
 
 int is_hat_open() {
 	if(FindWindow(HAT_WINDOW, NULL) != NULL) {
@@ -230,10 +243,12 @@ int main(int argc, char** argv) {
 	//struct hotkey* hotkeys = NULL;
 
 	//double igt;
+	double real_igt;
 	double saved_igt;
 	int tp_count;
-	int saved_tp_count;
-	int timer_state;
+	int chapter = 0;
+	int old_timer_state = 0;
+	int timer_state = 0;
 	short replace_igt = 0;
 
 	while(1) {
@@ -249,15 +264,19 @@ int main(int argc, char** argv) {
 			pe_ts = get_pe_ts(hat_address);
 			
 			switch(pe_ts) {
-				case DLC21_242922671485761424: 
+				case DLC21_242922671485761424:
+					real_igt_address = (BYTE*)(real_igt_addresses[0] + (unsigned long long)hat_address);
 					igt_address = (BYTE*)(igt_addresses[0] + (unsigned long long)hat_address);
 					timer_state_address = (BYTE*)(timer_state_addresses[0] + (unsigned long long)hat_address);
 					tp_count_address = (BYTE*)(tp_count_addresses[0] + (unsigned long long)hat_address);
+					chapter_path = chapter_paths[0];
 					break;
 				case DLC232_5506509173732835905:
+					real_igt_address = (BYTE*)(real_igt_addresses[1] + (unsigned long long)hat_address);
 					igt_address = (BYTE*)(igt_addresses[1] + (unsigned long long)hat_address);
 					timer_state_address = (BYTE*)(timer_state_addresses[1] + (unsigned long long)hat_address);
 					tp_count_address = (BYTE*)(tp_count_addresses[1] + (unsigned long long)hat_address);
+					chapter_path = chapter_paths[1];
 					break;
 				//case DLC15_8061143192026666389: fps_path = fps_paths[0]; break;
 				//case DLC231_7770543545116491859: fps_path = fps_paths[2]; break;
@@ -269,38 +288,73 @@ int main(int argc, char** argv) {
 				}
 			}
 
+			do {
+				Sleep(500);
+				chapter_address = resolve_ptr_path(process, hat_address, chapter_path);
+			} while (chapter_address < (BYTE*)0x10000); // arbitrary
+
 			game_open = 1;
-			printf("Game opened!\nWaiting for the timer to stop...\n");
+			printf("Game opened!\n");
+			if (timer_state == 1) {
+				replace_igt = 2;
+				saved_igt = real_igt;
+				printf("\nThe game may have been closed unexpectedly, if that is the case, open a file to restore the timer.\nOtherwise, open a new file to cancel the restoration.\n");
+				// print message (this makes the time printed follow the format of the igt)
+				// message + hours
+				printf("Time to be restored: %f (%d", saved_igt, (int)saved_igt / 3600);
+				// minutes [ (int)igt % 60 ]
+				printf(":%02d:", (int)saved_igt % 3600 / 60);
+				// seconds + ms [ igt % 60 + igt - (int)igt ], then multiply by 100, apply trunc(), divide by 100
+				printf("%05.2f)\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0);
+			}
+			else if (replace_igt == 0) {
+				printf("Waiting for the timer to stop...\n");
+			}
 		}
 
 		// testing / debugging
 		/*
 		if (GetAsyncKeyState('J') & 0x8000) {
 
-			ReadProcessMemory(process, timer_state_address, &timer_state, sizeof(timer_state), NULL);
+			ReadProcessMemory(process, real_igt_address, &real_igt, sizeof(real_igt), NULL);
 			ReadProcessMemory(process, igt_address, &saved_igt, sizeof(saved_igt), NULL);
 
-			// print message (this spaghetti makes the time printed follow the format of the igt)
+			// print message (this makes the time printed follow the format of the igt)
+
 			// message + hours
-			printf("\nIGT value: %f (%d", saved_igt, (int)saved_igt / 3600);
+			printf("\nREAL IGT value:\t%f (%d", real_igt, (int)real_igt / 3600);
 			// minutes [ (int)igt % 60 ]
-			(int)saved_igt % 3600 / 60 > 9 ? printf(":%d:", (int)saved_igt % 3600 / 60) : printf(":0%d:", (int)saved_igt % 3600 / 60);
+			printf(":%02d:", (int)real_igt % 3600 / 60);
 			// seconds + ms [ igt % 60 + igt - (int)igt ], then multiply by 100, apply trunc(), divide by 100
-			(double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt >= 10.0 ? printf("%.2f)\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0) : printf("0%.2f)\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0);
+			printf("%05.2f)\n", trunc(((double)((int)real_igt % 60) + real_igt - (double)(int)real_igt) * 100.0) / 100.0);
+
+			// message + hours
+			printf("IGT value:  \t%f (%d", saved_igt, (int)saved_igt / 3600);
+			// minutes [ (int)igt % 60 ]
+			printf(":%02d:", (int)saved_igt % 3600 / 60);
+			// seconds + ms [ igt % 60 + igt - (int)igt ], then multiply by 100, apply trunc(), divide by 100
+			printf("%05.2f)\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0);
 
 			ReadProcessMemory(process, tp_count_address, &tp_count, sizeof(tp_count), NULL);
-			printf("TIMEPIECES WOO: %d\n", tp_count);
-			printf("TIMER STATE: %d\n", timer_state);
-			printf("replace_igt: %d\n", replace_igt);
-			printf("timer_state: %d\n\n", timer_state);
+			printf("TIMEPIECES WOO:\t%d\n", tp_count);
+			printf("TIMER STATE:\t%d\n", timer_state);
+			printf("replace_igt:\t%d\n", replace_igt);
+			printf("timer_state:\t%d\n", timer_state);
+			printf("Chapter:\t%d\n\n", chapter);
 
 			//always = 1;
 		}
 		*/
 		
-		
 		if (is_hat_open() && game_open) {
 
+			// the chapter address will be constantly calculated when the timer will be restored
+			if (replace_igt != 0) {
+				chapter_address = resolve_ptr_path(process, hat_address, chapter_path);
+				ReadProcessMemory(process, chapter_address, &chapter, sizeof(chapter), NULL);
+			}
+
+			ReadProcessMemory(process, real_igt_address, &real_igt, sizeof(real_igt), NULL);
 			ReadProcessMemory(process, timer_state_address, &timer_state, sizeof(timer_state), NULL);
 			ReadProcessMemory(process, tp_count_address, &tp_count, sizeof(tp_count), NULL);
 
@@ -308,38 +362,46 @@ int main(int argc, char** argv) {
 			if (timer_state == 2 && replace_igt == 0) {
 				// save igt and tp count
 				ReadProcessMemory(process, igt_address, &saved_igt, sizeof(saved_igt), NULL);
-				ReadProcessMemory(process, tp_count_address, &saved_tp_count, sizeof(saved_tp_count), NULL);
 
-				// print message (this spaghetti makes the time printed follow the format of the igt)
+				// print message (this makes the time printed follow the format of the igt)
 				// message + hours
 				printf("\nTimer stop detected!\nSaving the following IGT value: %f (%d", saved_igt, (int)saved_igt / 3600);
 				// minutes [ (int)igt % 60 ]
-				(int)saved_igt % 3600 / 60 > 9 ? printf(":%d:", (int)saved_igt % 3600 / 60) : printf(":0%d:", (int)saved_igt % 3600 / 60);
-				// seconds + ms [ igt % 60 + igt - (int)igt ], then multiply by 100, apply trunc(), and divide by 100
-				(double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt >= 10.0 ? printf("%.2f)\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0) : printf("0%.2f)\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0);
-				printf("It will be restored to the next file opened with %d time pieces.\n", saved_tp_count);
+				printf(":%02d:", (int)saved_igt % 3600 / 60);
+				// seconds + ms [ igt % 60 + igt - (int)igt ], then multiply by 100, apply trunc(), divide by 100
+				printf("%05.2f).\n", trunc(((double)((int)saved_igt % 60) + saved_igt - (double)(int)saved_igt) * 100.0) / 100.0);
+
+				printf("It will be restored to the next file opened with The Finale as its last completed level.\n");
 				
 				// set replace igt flag
 				replace_igt = 1;
 			}
 
-			// saved time is restored when the igt is detected as active (1) with the same tp count as before
-			if (replace_igt == 1 && timer_state == 1 && saved_tp_count == tp_count) {
+			// if the replace flag is on but an empty file is opened, the program will go back to waiting for the timer state 2
+			if (replace_igt == 1 && timer_state == 1 && tp_count == 0) {
+				printf("\nEmpty file opened, the restoration will be canceled.\nWaiting for the timer to stop...\n");
+				replace_igt = 0;
+			}
+
+			// saved time is restored when the igt is detected as active (1) in a file that opened with the finale spawn point
+			if (replace_igt == 1 && old_timer_state == 0 && timer_state == 1 && chapter == 5) {
 				printf("\nRestoring IGT...");
 				WriteProcessMemory(process, igt_address, &saved_igt, sizeof(saved_igt), NULL);
 				printf(" Success!\nWaiting for the timer to stop...\n");
 				replace_igt = 0;
 			}
 
+			else if (replace_igt == 2 && old_timer_state == 0 && timer_state == 1) {
+				printf("\nRestoring IGT...");
+				WriteProcessMemory(process, igt_address, &saved_igt, sizeof(saved_igt), NULL);
+				printf(" Success!\nWaiting for the timer to stop...");
+				replace_igt = 0;
+			}
+
 		}
-		// only check once per second if the timer state is 2
-		if (replace_igt != 1) {
-			Sleep(1000);
-		}
-		// full speed if the timer is going to be replaced
-		else {
-			Sleep(3);
-		}
+
+		old_timer_state = timer_state;
+		Sleep(10);
 		
 	}
 
