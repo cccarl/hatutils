@@ -4,7 +4,7 @@ KEEP IN MIND THAT THIS IS ONLY USEFUL FOR SPEEDRUN CATEGORIES THAT USE DLC 2 PAT
 
 ## Features
 
-* Restore the IGT after completing finale and opening the same file without the need of entering it twice at the beginning  of a run.
+* Restore the IGT after completing finale and opening the same file without the need of entering it twice at the beginning of a run.
 * Restore the IGT after a game crash instead of manually calculating the time penalty.
 
 ## How do I use this?
@@ -13,7 +13,7 @@ Simply open this while the game is open, and it should show a message telling yo
 You can verify that it's working by beating The Finale and checking if a message is shown explaining what the program is going to do, or
 close the game while in game (not main menu) and reopen it, you will get a message about the timer being restored in case the game crashed.
 
-Supported  patches: DLC 2.1 and DLC 2.32 (aka 110% patch).
+Supported patches: DLC 2.1 and DLC 2.32 (aka 110% patch).
 
 ## Why is this needed?
 
@@ -32,3 +32,5 @@ Changes:
 * Now the spawn point in the hub is used instead of time piece count to have a partial save file detection. This makes the program compatible with 110% runs.
 * Opening an empty file cancels the IGT restoration.
 * Improved messages when closing and reopening the game.
+
+This program's code is based on doesthisusername's HatLag.

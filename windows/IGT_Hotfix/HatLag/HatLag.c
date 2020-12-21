@@ -298,7 +298,7 @@ int main(int argc, char** argv) {
 			if (timer_state == 1) {
 				replace_igt = 2;
 				saved_igt = real_igt;
-				printf("\nThe game may have been closed unexpectedly, if that is the case, open a file to restore the timer.\nOtherwise, open a new file to cancel the restoration.\n");
+				printf("\nThe game may have been closed unexpectedly, if that is the case, open a file to restore the timer.\nOtherwise, press 'J' or open a new file to cancel the restoration.\n");
 				// print message (this makes the time printed follow the format of the igt)
 				// message + hours
 				printf("Time to be restored: %f (%d", saved_igt, (int)saved_igt / 3600);
@@ -345,6 +345,11 @@ int main(int argc, char** argv) {
 			//always = 1;
 		}
 		*/
+
+		if (GetAsyncKeyState('J') & 0x8000 && replace_igt == 2) {
+			printf("\nCancelling the restoration.\nWaiting for the timer to stop...\n");
+			replace_igt = 0;
+		}
 		
 		if (is_hat_open() && game_open) {
 
@@ -378,7 +383,7 @@ int main(int argc, char** argv) {
 			}
 
 			// if the replace flag is on but an empty file is opened, the program will go back to waiting for the timer state 2
-			if (replace_igt == 1 && timer_state == 1 && tp_count == 0) {
+			if (replace_igt != 0 && timer_state == 1 && tp_count == 0) {
 				printf("\nEmpty file opened, the restoration will be canceled.\nWaiting for the timer to stop...\n");
 				replace_igt = 0;
 			}
@@ -394,7 +399,7 @@ int main(int argc, char** argv) {
 			else if (replace_igt == 2 && old_timer_state == 0 && timer_state == 1) {
 				printf("\nRestoring IGT...");
 				WriteProcessMemory(process, igt_address, &saved_igt, sizeof(saved_igt), NULL);
-				printf(" Success!\nWaiting for the timer to stop...");
+				printf(" Success!\nWaiting for the timer to stop...\n");
 				replace_igt = 0;
 			}
 
