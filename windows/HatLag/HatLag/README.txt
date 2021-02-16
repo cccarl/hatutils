@@ -1,6 +1,6 @@
 This is HatLag
 Just double-click HatLag.exe to use (if you pass an argument, that will override the path for keybinds.txt)
-It works on DLC1.5 (DW Any%), DLC2.1 (Any%), DLC2.31 (TAS patch), and DLC2.32 (110%)
+It works on DLC1.5 (DW Any%), DLC2.1 (Any%), DLC2.31 (TAS patch), DLC2.32 (110%), modding patch, 1.0 patch, current patch (as of 2021-02-16)
 
 Then, keybinds.txt contains your binds, in the format "keycode: millisecond-duration", one on each line
 There can be an unlimited amount of binds, each with their own lag durations. Please note that, unless the --i-am-testing commandline argument is added, that every duration will be replaced with 400 milliseconds

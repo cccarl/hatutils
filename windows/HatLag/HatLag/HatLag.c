@@ -14,7 +14,10 @@ enum {
 	DLC21_242922671485761424 = 1557549916, // any% patch
 	DLC231_7770543545116491859 = 1561041656, // tas patch
 	DLC232_5506509173732835905 = 1565114742, // 110% patch
-	VER_MAX = 4
+	MODDING_2996573833536660306 = 1527447656, // modding patch
+	ONE_DOT_ZERO_4435011916194978256 = 1507242708, // 1.0 patch
+	CURRENT_8420832693201178801 = 1613345669, // current as of 2021-02-16
+	VER_MAX = 7
 };
 
 struct hotkey {
@@ -38,7 +41,10 @@ char* fps_paths[VER_MAX] = {
 	"0x11C27E0, 0x710",
 	"0x11BC360, 0x710",
 	"0x11F6F10, 0x710",
-	"0x11F9FE0, 0x710"
+	"0x11F9FE0, 0x710",
+	"0x11229C0, 0x710",
+	"0x116A170, 0x710",
+	"0x11FBB10, 0x710"
 };
 
 unsigned int get_pe_ts(BYTE* base) {
@@ -230,6 +236,9 @@ int main(int argc, char** argv) {
 				case DLC21_242922671485761424: fps_path = fps_paths[1]; break;
 				case DLC231_7770543545116491859: fps_path = fps_paths[2]; break;
 				case DLC232_5506509173732835905: fps_path = fps_paths[3]; break;
+				case MODDING_2996573833536660306: fps_path = fps_paths[4]; break;
+				case ONE_DOT_ZERO_4435011916194978256: fps_path = fps_paths[5]; break;
+				case CURRENT_8420832693201178801: fps_path = fps_paths[6]; break;
 				default: {
 					printf("Your version of the game is not supported (%u), doing nothing.\n", pe_ts);
 					continue;
